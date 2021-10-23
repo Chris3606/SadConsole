@@ -229,8 +229,8 @@ namespace SadConsole
             SadComponents.CollectionChanged += Components_CollectionChanged;
             Children = new ScreenObjectCollection(this);
 
-            _childrenArrayPool = ArrayPool<IScreenObject>.Create();
-            _componentsArrayPool = ArrayPool<IComponent>.Create();
+            _childrenArrayPool = ArrayPool<IScreenObject>.Shared;
+            _componentsArrayPool = ArrayPool<IComponent>.Shared;
         }
 
         /// <inheritdoc/>
