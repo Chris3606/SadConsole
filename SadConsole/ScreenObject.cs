@@ -55,22 +55,22 @@ namespace SadConsole
         /// <summary>
         /// A filtered list from <see cref="SadComponents"/> where <see cref="IComponent.IsUpdate"/> is <see langword="true"/>.
         /// </summary>
-        protected List<IComponent> ComponentsUpdate;
+        protected ChangeDelayedList<IComponent> ComponentsUpdate;
 
         /// <summary>
         /// A filtered list from <see cref="SadComponents"/> where <see cref="IComponent.IsRender"/> is <see langword="true"/>.
         /// </summary>
-        protected List<IComponent> ComponentsRender;
+        protected ChangeDelayedList<IComponent> ComponentsRender;
 
         /// <summary>
         /// A filtered list from <see cref="SadComponents"/> where <see cref="IComponent.IsMouse"/> is <see langword="true"/>.
         /// </summary>
-        protected List<IComponent> ComponentsMouse;
+        protected ChangeDelayedList<IComponent> ComponentsMouse;
 
         /// <summary>
         /// A filtered list from <see cref="SadComponents"/> where <see cref="IComponent.IsKeyboard"/> is <see langword="true"/>.
         /// </summary>
-        protected List<IComponent> ComponentsKeyboard;
+        protected ChangeDelayedList<IComponent> ComponentsKeyboard;
 
         /// <summary>
         /// A filtered list from <see cref="SadComponents"/> that is not set for update, render, mouse, or keyboard.
@@ -217,10 +217,10 @@ namespace SadConsole
             UseMouse = Settings.DefaultScreenObjectUseMouse;
             UseKeyboard = Settings.DefaultScreenObjectUseKeyboard;
             SadComponents = new ObservableCollection<IComponent>();
-            ComponentsUpdate = new List<IComponent>();
-            ComponentsRender = new List<IComponent>();
-            ComponentsKeyboard = new List<IComponent>();
-            ComponentsMouse = new List<IComponent>();
+            ComponentsUpdate = new ChangeDelayedList<IComponent>();
+            ComponentsRender = new ChangeDelayedList<IComponent>();
+            ComponentsKeyboard = new ChangeDelayedList<IComponent>();
+            ComponentsMouse = new ChangeDelayedList<IComponent>();
             ComponentsEmpty = new List<IComponent>();
             SadComponents.CollectionChanged += Components_CollectionChanged;
             Children = new ScreenObjectCollection(this);
@@ -231,12 +231,16 @@ namespace SadConsole
         {
             if (!IsVisible) return;
 
-            var components = ComponentsRender.ToArray();
-            for (int i = 0; i < components.Length; i++)
+            ComponentsRender.FlushChangesToCache();
+            var components = ComponentsRender.CachedItems;
+            var count = components.Count;
+            for (int i = 0; i < count; i++)
                 components[i].Render(this, delta);
 
-            var children = new List<IScreenObject>(Children);
-            for (int i = 0; i < children.Count; i++)
+            Children.FlushChangesToCache();
+            var children = Children.CachedItems;
+            count = children.Count;
+            for (int i = 0; i < count; i++)
                 children[i].Render(delta);
         }
 
@@ -245,12 +249,16 @@ namespace SadConsole
         {
             if (!IsEnabled) return;
 
-            var components = ComponentsUpdate.ToArray();
-            for (int i = 0; i < components.Length; i++)
+            ComponentsUpdate.FlushChangesToCache();
+            var components = ComponentsUpdate.CachedItems;
+            var count = components.Count;
+            for (int i = 0; i < count; i++)
                 components[i].Update(this, delta);
 
-            var children = new List<IScreenObject>(Children);
-            for (int i = 0; i < children.Count; i++)
+            Children.FlushChangesToCache();
+            var children = Children.CachedItems;
+            count = children.Count;
+            for (int i = 0; i < count; i++)
                 children[i].Update(delta);
         }
 
@@ -259,8 +267,10 @@ namespace SadConsole
         {
             if (!UseKeyboard) return false;
 
-            var components = ComponentsKeyboard.ToArray();
-            for (int i = 0; i < components.Length; i++)
+            ComponentsKeyboard.FlushChangesToCache();
+            var components = ComponentsKeyboard.CachedItems;
+            var count = components.Count;
+            for (int i = 0; i < count; i++)
             {
                 components[i].ProcessKeyboard(this, keyboard, out bool isHandled);
 
@@ -277,17 +287,19 @@ namespace SadConsole
             if (!IsVisible)
                 return false;
 
-            if (!UseMouse)
-                return false;
-
-            var components = ComponentsMouse.ToArray();
-            for (int i = 0; i < components.Length; i++)
+            ComponentsMouse.FlushChangesToCache();
+            var components = ComponentsMouse.CachedItems;
+            var count = components.Count;
+            for (int i = 0; i < count; i++)
             {
                 components[i].ProcessMouse(this, state, out bool isHandled);
 
                 if (isHandled)
                     return true;
             }
+
+            if (!UseMouse)
+                return false;
 
             return false;
         }
@@ -392,43 +404,43 @@ namespace SadConsole
                     SortComponents();
                     break;
                 case NotifyCollectionChangedAction.Reset:
-                    List<IComponent> items = new List<IComponent>(ComponentsRender.Count + ComponentsUpdate.Count + ComponentsKeyboard.Count + ComponentsMouse.Count);
+                    List<IComponent> items = new List<IComponent>(ComponentsRender.Items.Count + ComponentsUpdate.Items.Count + ComponentsKeyboard.Items.Count + ComponentsMouse.Items.Count);
 
-                    while (ComponentsRender.Count != 0)
+                    while (ComponentsRender.Items.Count != 0)
                     {
-                        ComponentsRender[0].OnRemoved(this);
+                        ComponentsRender.Items[0].OnRemoved(this);
 
-                        if (!items.Contains(ComponentsRender[0]))
-                            items.Add(ComponentsRender[0]);
+                        if (!items.Contains(ComponentsRender.Items[0]))
+                            items.Add(ComponentsRender.Items[0]);
 
-                        Components_FilterRemoveItem(ComponentsRender[0], ComponentsRender, ComponentsUpdate, ComponentsKeyboard, ComponentsMouse, ComponentsEmpty);
+                        Components_FilterRemoveItem(ComponentsRender.Items[0], ComponentsRender, ComponentsUpdate, ComponentsKeyboard, ComponentsMouse, ComponentsEmpty);
                     }
-                    while (ComponentsUpdate.Count != 0)
+                    while (ComponentsUpdate.Items.Count != 0)
                     {
-                        ComponentsUpdate[0].OnRemoved(this);
+                        ComponentsUpdate.Items[0].OnRemoved(this);
 
-                        if (!items.Contains(ComponentsUpdate[0]))
-                            items.Add(ComponentsUpdate[0]);
+                        if (!items.Contains(ComponentsUpdate.Items[0]))
+                            items.Add(ComponentsUpdate.Items[0]);
 
-                        Components_FilterRemoveItem(ComponentsUpdate[0], ComponentsRender, ComponentsUpdate, ComponentsKeyboard, ComponentsMouse, ComponentsEmpty);
+                        Components_FilterRemoveItem(ComponentsUpdate.Items[0], ComponentsRender, ComponentsUpdate, ComponentsKeyboard, ComponentsMouse, ComponentsEmpty);
                     }
-                    while (ComponentsKeyboard.Count != 0)
+                    while (ComponentsKeyboard.Items.Count != 0)
                     {
-                        ComponentsKeyboard[0].OnRemoved(this);
+                        ComponentsKeyboard.Items[0].OnRemoved(this);
 
-                        if (!items.Contains(ComponentsKeyboard[0]))
-                            items.Add(ComponentsKeyboard[0]);
+                        if (!items.Contains(ComponentsKeyboard.Items[0]))
+                            items.Add(ComponentsKeyboard.Items[0]);
 
-                        Components_FilterRemoveItem(ComponentsKeyboard[0], ComponentsRender, ComponentsUpdate, ComponentsKeyboard, ComponentsMouse, ComponentsEmpty);
+                        Components_FilterRemoveItem(ComponentsKeyboard.Items[0], ComponentsRender, ComponentsUpdate, ComponentsKeyboard, ComponentsMouse, ComponentsEmpty);
                     }
-                    while (ComponentsMouse.Count != 0)
+                    while (ComponentsMouse.Items.Count != 0)
                     {
-                        ComponentsMouse[0].OnRemoved(this);
+                        ComponentsMouse.Items[0].OnRemoved(this);
 
-                        if (!items.Contains(ComponentsMouse[0]))
-                            items.Add(ComponentsMouse[0]);
+                        if (!items.Contains(ComponentsMouse.Items[0]))
+                            items.Add(ComponentsMouse.Items[0]);
 
-                        Components_FilterRemoveItem(ComponentsMouse[0], ComponentsRender, ComponentsUpdate, ComponentsKeyboard, ComponentsMouse, ComponentsEmpty);
+                        Components_FilterRemoveItem(ComponentsMouse.Items[0], ComponentsRender, ComponentsUpdate, ComponentsKeyboard, ComponentsMouse, ComponentsEmpty);
                     }
                     while (ComponentsEmpty.Count != 0)
                     {
@@ -558,10 +570,10 @@ namespace SadConsole
         /// <param name="componentsMouse">The mouse collection.</param>
         /// <param name="componentsEmpty">The empty collection.</param>
         public static void Components_FilterAddItem(IComponent component,
-                                                    List<IComponent> componentsRender,
-                                                    List<IComponent> componentsUpdate,
-                                                    List<IComponent> componentsKeyboard,
-                                                    List<IComponent> componentsMouse,
+                                                    ChangeDelayedList<IComponent> componentsRender,
+                                                    ChangeDelayedList<IComponent> componentsUpdate,
+                                                    ChangeDelayedList<IComponent> componentsKeyboard,
+                                                    ChangeDelayedList<IComponent> componentsMouse,
                                                     List<IComponent> componentsEmpty)
         {
             if (component.IsRender)
@@ -601,10 +613,10 @@ namespace SadConsole
         /// <param name="componentsMouse">The mouse collection.</param>
         /// <param name="componentsEmpty">The empty collection.</param>
         public static void Components_FilterRemoveItem(IComponent component,
-                                                        List<IComponent> componentsRender,
-                                                        List<IComponent> componentsUpdate,
-                                                        List<IComponent> componentsKeyboard,
-                                                        List<IComponent> componentsMouse,
+                                                        ChangeDelayedList<IComponent> componentsRender,
+                                                        ChangeDelayedList<IComponent> componentsUpdate,
+                                                        ChangeDelayedList<IComponent> componentsKeyboard,
+                                                        ChangeDelayedList<IComponent> componentsMouse,
                                                         List<IComponent> componentsEmpty)
         {
             if (component.IsRender)
@@ -642,10 +654,10 @@ namespace SadConsole
         /// <param name="componentsKeyboard">The keyboard collection.</param>
         /// <param name="componentsMouse">The mouse collection.</param>
         /// <param name="componentsEmpty">The empty collection.</param>
-        public static void Components_Sort(List<IComponent> componentsRender,
-                                            List<IComponent> componentsUpdate,
-                                            List<IComponent> componentsKeyboard,
-                                            List<IComponent> componentsMouse,
+        public static void Components_Sort(ChangeDelayedList<IComponent> componentsRender,
+                                            ChangeDelayedList<IComponent> componentsUpdate,
+                                            ChangeDelayedList<IComponent> componentsKeyboard,
+                                            ChangeDelayedList<IComponent> componentsMouse,
                                             List<IComponent> componentsEmpty)
         {
             componentsRender.Sort(CompareComponent);

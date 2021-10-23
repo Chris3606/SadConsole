@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.Serialization;
 using SadConsole.Input;
 
@@ -98,7 +99,7 @@ namespace SadConsole
         {
             if (!IsVisible) return false;
 
-            foreach (SadConsole.Components.IComponent component in ComponentsMouse.ToArray())
+            foreach (SadConsole.Components.IComponent component in ComponentsMouse.Items.ToArray())
             {
                 component.ProcessMouse(this, state, out bool isHandled);
 

@@ -30,7 +30,7 @@ namespace SadConsole
         /// <summary>
         /// Internal list of objects.
         /// </summary>
-        protected List<TScreenObject> objects;
+        protected ChangeDelayedList<TScreenObject> objects;
 
         /// <summary>
         /// The parent object.
@@ -40,12 +40,17 @@ namespace SadConsole
         /// <summary>
         /// Returns the total number of objects in this collection.
         /// </summary>
-        public int Count => objects.Count;
+        public int Count => objects.Items.Count;
 
         /// <summary>
         /// When true, the collection cannot be modified.
         /// </summary>
         public bool IsLocked { get; set; }
+
+        /// <summary>
+        /// The internally tracked cache of items, that can be used for safe iteration
+        /// </summary>
+        public IReadOnlyList<TScreenObject> CachedItems => objects.CachedItems;
 
         /// <summary>
         /// Gets or sets a child object for this collection.
@@ -54,7 +59,7 @@ namespace SadConsole
         /// <returns>The wanted object.</returns>
         public TScreenObject this[int index]
         {
-            get => objects[index];
+            get => objects.Items[index];
             set
             {
                 if (IsLocked)
@@ -62,13 +67,13 @@ namespace SadConsole
                     throw new Exception("The collection is locked and cannot be modified.");
                 }
 
-                if (objects[index] == value)
+                if (objects.Items[index] == value)
                 {
                     return;
                 }
 
-                TScreenObject oldObject = objects[index];
-                objects[index] = value;
+                TScreenObject oldObject = objects.Items[index];
+                objects.Replace(index, value);
                 RemoveObjParent(oldObject);
                 SetObjParent(value);
                 CollectionChanged?.Invoke(this, EventArgs.Empty);
@@ -81,7 +86,7 @@ namespace SadConsole
         /// <param name="owner">The owning object of this collection.</param>
         public ScreenObjectCollection(IScreenObject owner)
         {
-            objects = new List<TScreenObject>();
+            objects = new ChangeDelayedList<TScreenObject>();
             owningObject = owner;
         }
 
@@ -116,7 +121,7 @@ namespace SadConsole
         {
             if (objects.Contains(obj))
             {
-                return objects.IndexOf(obj) == objects.Count - 1;
+                return ReferenceEquals(obj, objects.Items[^1]);
             }
 
             return false;
@@ -228,10 +233,15 @@ namespace SadConsole
             obj.Parent = null;
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() =>
-            objects.GetEnumerator();
+            objects.Items.GetEnumerator();
 
         /// <inheritdoc />
         public IEnumerator<TScreenObject> GetEnumerator() =>
-            objects.GetEnumerator();
+            objects.Items.GetEnumerator();
+
+        public void FlushChangesToCache()
+        {
+            objects.FlushChangesToCache();
+        }
     }
 }

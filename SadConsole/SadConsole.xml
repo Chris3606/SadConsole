@@ -800,6 +800,12 @@
             </summary>
             <returns>An enumerator for <see cref="P:SadConsole.CellSurface.Cells"/>.</returns>
         </member>
+        <member name="T:SadConsole.ChangeDelayedList`1">
+            <summary>
+            A wrapper around a list designed to support efficient modification-while-iteration via an change-set caching system, at the expense of additional memory usage.
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
         <member name="T:SadConsole.ColoredGlyph">
             <summary>
             Represents an individual piece of a <see cref="T:SadConsole.ICellSurface"/> containing a glyph, foreground color, background color, and a mirror effect.
@@ -7396,7 +7402,7 @@
             </summary>
             <param name="context">Nothing.</param>
         </member>
-        <member name="M:SadConsole.ScreenObject.Components_FilterAddItem(SadConsole.Components.IComponent,System.Collections.Generic.List{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent})">
+        <member name="M:SadConsole.ScreenObject.Components_FilterAddItem(SadConsole.Components.IComponent,SadConsole.ChangeDelayedList{SadConsole.Components.IComponent},SadConsole.ChangeDelayedList{SadConsole.Components.IComponent},SadConsole.ChangeDelayedList{SadConsole.Components.IComponent},SadConsole.ChangeDelayedList{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent})">
             <summary>
             Adds a component to the provided collections, based on its configuration.
             </summary>
@@ -7407,7 +7413,7 @@
             <param name="componentsMouse">The mouse collection.</param>
             <param name="componentsEmpty">The empty collection.</param>
         </member>
-        <member name="M:SadConsole.ScreenObject.Components_FilterRemoveItem(SadConsole.Components.IComponent,System.Collections.Generic.List{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent})">
+        <member name="M:SadConsole.ScreenObject.Components_FilterRemoveItem(SadConsole.Components.IComponent,SadConsole.ChangeDelayedList{SadConsole.Components.IComponent},SadConsole.ChangeDelayedList{SadConsole.Components.IComponent},SadConsole.ChangeDelayedList{SadConsole.Components.IComponent},SadConsole.ChangeDelayedList{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent})">
             <summary>
             Removes a component to the provided collections, based on its configuration.
             </summary>
@@ -7418,7 +7424,7 @@
             <param name="componentsMouse">The mouse collection.</param>
             <param name="componentsEmpty">The empty collection.</param>
         </member>
-        <member name="M:SadConsole.ScreenObject.Components_Sort(System.Collections.Generic.List{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent})">
+        <member name="M:SadConsole.ScreenObject.Components_Sort(SadConsole.ChangeDelayedList{SadConsole.Components.IComponent},SadConsole.ChangeDelayedList{SadConsole.Components.IComponent},SadConsole.ChangeDelayedList{SadConsole.Components.IComponent},SadConsole.ChangeDelayedList{SadConsole.Components.IComponent},System.Collections.Generic.List{SadConsole.Components.IComponent})">
             <summary>
             Helper to sort the components in the split collections.
             </summary>
@@ -7467,6 +7473,11 @@
         <member name="P:SadConsole.ScreenObjectCollection`1.IsLocked">
             <summary>
             When true, the collection cannot be modified.
+            </summary>
+        </member>
+        <member name="P:SadConsole.ScreenObjectCollection`1.CachedItems">
+            <summary>
+            The internally tracked cache of items, that can be used for safe iteration
             </summary>
         </member>
         <member name="P:SadConsole.ScreenObjectCollection`1.Item(System.Int32)">

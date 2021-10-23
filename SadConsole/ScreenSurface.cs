@@ -264,7 +264,7 @@ namespace SadConsole
                 ForceRendererRefresh = false;
             }
 
-            foreach (IComponent component in ComponentsRender.ToArray())
+            foreach (IComponent component in ComponentsRender.Items.ToArray())
                 component.Render(this, delta);
 
             foreach (IScreenObject child in new List<IScreenObject>(Children))
@@ -282,7 +282,7 @@ namespace SadConsole
 
             Surface.Effects.UpdateEffects(delta.TotalSeconds);
 
-            foreach (IComponent component in ComponentsUpdate.ToArray())
+            foreach (IComponent component in ComponentsUpdate.Items.ToArray())
                 component.Update(this, delta);
 
             foreach (IScreenObject child in new List<IScreenObject>(Children))
