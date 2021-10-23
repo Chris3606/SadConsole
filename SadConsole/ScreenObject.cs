@@ -253,18 +253,32 @@ namespace SadConsole
             if (!IsEnabled) return;
 
             int count = ComponentsUpdate.Count;
-            var components = _componentsArrayPool.Rent(count);
-            ComponentsUpdate.CopyTo(components);
-            for (int i = 0; i < count; i++)
-                components[i].Update(this, delta);
-            _componentsArrayPool.Return(components); // TODO: Do in a finally block
+            IComponent[] components = null;
+            try
+            {
+                components = _componentsArrayPool.Rent(count);
+                ComponentsUpdate.CopyTo(components);
+                for (int i = 0; i < count; i++)
+                    components[i].Update(this, delta);
+            }
+            finally
+            {
+                _componentsArrayPool.Return(components);
+            }
 
             count = Children.Count;
-            var children = _childrenArrayPool.Rent(count);
-            Children.CopyTo(children);
-            for (int i = 0; i < count; i++)
-                children[i].Update(delta);
-            _childrenArrayPool.Return(children); // TODO: Do in a finally block
+            IScreenObject[] children = null;
+            try
+            {
+                children = _childrenArrayPool.Rent(count);
+                Children.CopyTo(children);
+                for (int i = 0; i < count; i++)
+                    children[i].Update(delta);
+            }
+            finally
+            {
+                _childrenArrayPool.Return(children);
+            }
         }
 
         /// <inheritdoc/>
