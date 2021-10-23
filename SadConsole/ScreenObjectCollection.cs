@@ -233,5 +233,10 @@ namespace SadConsole
         /// <inheritdoc />
         public IEnumerator<TScreenObject> GetEnumerator() =>
             objects.GetEnumerator();
+
+        public void CopyTo(TScreenObject[] array)
+        {
+            objects.CopyTo(array);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -32,6 +33,9 @@ namespace SadConsole
         private bool _isVisible = true;
         private bool _isEnabled = true;
         private bool _isfocused;
+
+        private ArrayPool<IScreenObject> _childrenArrayPool;
+        private ArrayPool<IComponent> _componentsArrayPool;
 
 
         /// <inheritdoc/>
@@ -224,6 +228,9 @@ namespace SadConsole
             ComponentsEmpty = new List<IComponent>();
             SadComponents.CollectionChanged += Components_CollectionChanged;
             Children = new ScreenObjectCollection(this);
+
+            _childrenArrayPool = ArrayPool<IScreenObject>.Create();
+            _componentsArrayPool = ArrayPool<IComponent>.Create();
         }
 
         /// <inheritdoc/>
@@ -245,13 +252,19 @@ namespace SadConsole
         {
             if (!IsEnabled) return;
 
-            var components = ComponentsUpdate.ToArray();
-            for (int i = 0; i < components.Length; i++)
+            int count = ComponentsUpdate.Count;
+            var components = _componentsArrayPool.Rent(count);
+            ComponentsUpdate.CopyTo(components);
+            for (int i = 0; i < count; i++)
                 components[i].Update(this, delta);
+            _componentsArrayPool.Return(components); // TODO: Do in a finally block
 
-            var children = new List<IScreenObject>(Children);
-            for (int i = 0; i < children.Count; i++)
+            count = Children.Count;
+            var children = _childrenArrayPool.Rent(count);
+            Children.CopyTo(children);
+            for (int i = 0; i < count; i++)
                 children[i].Update(delta);
+            _childrenArrayPool.Return(children); // TODO: Do in a finally block
         }
 
         /// <inheritdoc/>
